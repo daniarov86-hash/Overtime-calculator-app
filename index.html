@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b1a24">
+<title>מחשבון שעות נוספות</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-title" content="שעות נוספות">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════ */
+:root {
+  --bg:          #0b1a24;
+  --bg2:         #101f2e;
+  --surface:     #152535;
+  --card:        #192d3e;
+  --border:      rgba(255,255,255,0.07);
+  --accent:      #00d4a0;
+  --accent2:     #00aaff;
+  --accent-glow: rgba(0,212,160,0.22);
+  --warn:        #f5a623;
+  --danger:      #ff5f5f;
+  --text:        #e2eff8;
+  --muted:       #6b8fa8;
+  --radius:      20px;
+  --transition:  0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+[data-theme="light"] {
+  --bg:          #f0f5f9;
+  --bg2:         #e6edf3;
+  --surface:     #ffffff;
+  --card:        #ffffff;
+  --border:      rgba(0,0,0,0.08);
+  --accent:      #009e78;
+  --accent2:     #0077cc;
+  --accent-glow: rgba(0,158,120,0.15);
+  --warn:        #d4850a;
+  --danger:      #d93636;
+  --text:        #0d1f2d;
+  --muted:       #6b8fa8;
+}
+
+/* ═══════════════════════════════════════
+   INSTALL BANNER
+═══════════════════════════════════════ */
+#installBanner {
+  margin: 12px 16px 0;
+  background: var(--card);
+  border: 1px solid rgba(0,212,160,0.25);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 4px 20px rgba(0,212,160,0.1);
+  animation: fadeUp 0.4s both;
+}
+#installBannerInner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ═══════════════════════════════════════
+   BASE
+═══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Rubik', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100svh;
+  transition: background var(--transition), color var(--transition);
+  padding-bottom: 48px;
+}
+
+/* ═══════════════════════════════════════
+   HEADER
+═══════════════════════════════════════ */
+.header {
+  position: relative;
+  padding: 56px 24px 32px;
+  overflow: hidden;
+  background: var(--bg2);
+}
+
+.header-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+}
+.blob1 {
+  width: 220px; height: 220px;
+  background: var(--accent-glow);
+  top: -80px; right: -60px;
+  animation: blobFloat 6s ease-in-out infinite;
+}
+.blob2 {
+  width: 160px; height: 160px;
+  background: rgba(0,170,255,0.1);
+  bottom: -60px; left: -40px;
+  animation: blobFloat 8s ease-in-out infinite reverse;
+}
+@keyframes blobFloat {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%      { transform: translate(12px,-12px) scale(1.06); }
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 20px; left: 20px;
+  width: 42px; height: 42px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: background var(--transition), transform 0.2s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+.theme-toggle:active { transform: scale(0.92); }
+
+.header-icon {
+  width: 60px; height: 60px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 28px var(--accent-glow);
+  animation: iconPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes iconPop {
+  from { opacity:0; transform: scale(0.5) rotate(-10deg); }
+  to   { opacity:1; transform: scale(1) rotate(0deg); }
+}
+
+.header h1 {
+  font-size: 28px; font-weight: 900;
+  line-height: 1.15;
+  animation: fadeUp 0.5s 0.1s both;
+}
+.header p {
+  font-size: 13px; color: var(--muted);
+  margin-top: 6px; font-weight: 400;
+  animation: fadeUp 0.5s 0.2s both;
+}
+.formula-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,212,160,0.1);
+  border: 1px solid rgba(0,212,160,0.25);
+  color: var(--accent);
+  font-size: 12px; font-weight: 700;
+  padding: 5px 14px; border-radius: 20px;
+  margin-top: 12px;
+  animation: fadeUp 0.5s 0.3s both;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(14px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════
+   CONTENT
+═══════════════════════════════════════ */
+.content { padding: 20px 16px 0; }
+
+/* ═══════════════════════════════════════
+   CARD
+═══════════════════════════════════════ */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  transition: background var(--transition), border-color var(--transition);
+  animation: fadeUp 0.5s both;
+}
+.card:nth-child(1) { animation-delay: 0.35s; }
+.card:nth-child(2) { animation-delay: 0.45s; }
+
+.card-title {
+  font-size: 13px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--muted); margin-bottom: 20px;
+}
+
+/* ═══════════════════════════════════════
+   INPUTS
+═══════════════════════════════════════ */
+.input-group { margin-bottom: 22px; }
+.input-group:last-child { margin-bottom: 0; }
+
+.input-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 700; color: var(--text);
+  margin-bottom: 10px;
+}
+.input-hint {
+  font-size: 12px; font-weight: 400; color: var(--muted);
+  margin-top: 5px; padding-right: 2px;
+}
+.tag {
+  background: rgba(0,212,160,0.13);
+  color: var(--accent);
+  font-size: 11px; font-weight: 800;
+  padding: 2px 9px; border-radius: 7px;
+  font-family: monospace; letter-spacing: 0.5px;
+}
+
+.input-wrap { position: relative; }
+
+input[type=number] {
+  width: 100%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px 16px 56px;
+  font-size: 22px; font-weight: 800;
+  color: var(--text);
+  font-family: 'Rubik', sans-serif;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s, background var(--transition);
+  -webkit-appearance: none;
+  text-align: right;
+  direction: ltr;
+}
+input[type=number]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+}
+input[type=number]::placeholder { color: rgba(120,160,180,0.35); font-weight: 400; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.input-suffix {
+  position: absolute;
+  left: 18px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px; font-weight: 700;
+  color: var(--muted); pointer-events: none;
+  transition: color 0.25s;
+}
+input:focus ~ .input-suffix { color: var(--accent); }
+
+/* Alpha indicator */
+.alpha-indicator {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  transition: all 0.3s;
+}
+.alpha-indicator .ai-label { font-size: 12px; color: var(--muted); }
+.alpha-badge {
+  font-size: 13px; font-weight: 800;
+  padding: 4px 12px; border-radius: 8px;
+  transition: all 0.3s;
+  background: rgba(107,143,168,0.12);
+  color: var(--muted);
+}
+.alpha-badge.g { background: rgba(0,212,160,0.14); color: var(--accent); }
+.alpha-badge.y { background: rgba(245,166,35,0.14); color: var(--warn); }
+.alpha-badge.r { background: rgba(255,95,95,0.14);  color: var(--danger); }
+.alpha-badge.p { background: rgba(168,85,247,0.18); color: #c084fc; font-size: 15px; }
+
+.alpha-track {
+  display: flex; gap: 5px; margin-top: 8px;
+}
+.alpha-seg {
+  flex: 1; height: 5px; border-radius: 3px;
+  background: var(--border);
+  transition: background 0.4s, transform 0.2s;
+}
+.alpha-seg.lit { transform: scaleY(1.4); }
+.alpha-seg.g { background: var(--accent); }
+.alpha-seg.y { background: var(--warn); }
+.alpha-seg.r { background: var(--danger); }
+.alpha-seg.p { background: #a855f7; }
+
+.alpha-range-labels {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--muted);
+  margin-top: 5px; padding: 0 2px;
+}
+
+/* Formula section */
+.formula-section {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 14px;
+}
+.formula-card {
+  border-radius: 16px;
+  padding: 16px 14px;
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.formula-normal {
+  background: linear-gradient(145deg, rgba(0,212,160,0.07) 0%, var(--card) 100%);
+  border-color: rgba(0,212,160,0.18);
+}
+.formula-special {
+  background: linear-gradient(145deg, rgba(168,85,247,0.1) 0%, var(--card) 100%);
+  border-color: rgba(168,85,247,0.25);
+}
+.fc-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; margin-bottom: 8px;
+}
+.formula-normal .fc-label { color: var(--accent); }
+.formula-special .fc-label { color: #c084fc; }
+.fc-formula {
+  font-size: 15px; font-weight: 800;
+  line-height: 1.3; margin-bottom: 4px;
+  color: var(--text);
+}
+.fc-sub {
+  font-size: 12px; color: var(--muted); margin-bottom: 8px;
+}
+.fc-note {
+  font-size: 11px; font-weight: 600;
+  background: rgba(168,85,247,0.14);
+  color: #c084fc;
+  display: inline-block;
+  padding: 2px 8px; border-radius: 6px;
+}
+.fc-coeffs { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.fcc {
+  font-size: 11px; font-weight: 600;
+  padding: 2px 7px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fcc em { font-style: normal; font-weight: 400; opacity: 0.7; }
+.fcc.g { background: rgba(0,212,160,0.1);  color: var(--accent); }
+.fcc.y { background: rgba(245,166,35,0.1); color: var(--warn); }
+.fcc.r { background: rgba(255,95,95,0.1);  color: var(--danger); }
+
+/* ═══════════════════════════════════════
+   BUTTON
+═══════════════════════════════════════ */
+.btn-calc {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent) 0%, #00a878 100%);
+  color: #061a14;
+  font-size: 17px; font-weight: 800;
+  font-family: 'Rubik', sans-serif;
+  border: none; border-radius: 16px;
+  padding: 19px;
+  cursor: pointer;
+  box-shadow: 0 8px 28px var(--accent-glow);
+  letter-spacing: 0.4px;
+  position: relative; overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-calc::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
+}
+.btn-calc:active { transform: scale(0.97); box-shadow: 0 4px 14px var(--accent-glow); }
+
+/* Ripple */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  transform: scale(0);
+  animation: rippleAnim 0.55s linear;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+.btn-clear {
+  width: 100%; margin-top: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px; font-weight: 600;
+  font-family: 'Rubik', sans-serif;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-clear:active { background: var(--surface); color: var(--text); }
+
+/* ═══════════════════════════════════════
+   ERROR
+═══════════════════════════════════════ */
+.error-msg {
+  background: rgba(255,95,95,0.1);
+  border: 1px solid rgba(255,95,95,0.25);
+  color: #ffa0a0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px; font-weight: 500;
+  margin-top: 10px;
+  opacity: 0; max-height: 0; overflow: hidden;
+  transition: opacity 0.3s, max-height 0.3s, padding 0.3s;
+}
+.error-msg.visible { opacity: 1; max-height: 80px; }
+
+/* ═══════════════════════════════════════
+   RESULT CARD
+═══════════════════════════════════════ */
+.result-card {
+  background: var(--card);
+  border: 1px solid rgba(0,212,160,0.2);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.4s;
+}
+.result-card.visible {
+  max-height: 600px;
+  opacity: 1;
+}
+
+/* Glowing top bar */
+.result-glow-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+  background-size: 200% 100%;
+  animation: shimmer 2.5s linear infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.result-inner { padding: 22px; }
+
+/* Big counter */
+.result-hero {
+  text-align: center;
+  padding: 20px 0 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.result-hero .hero-label {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--muted);
+}
+.result-hero .hero-amount {
+  display: flex; align-items: baseline; justify-content: center; gap: 6px;
+  margin: 10px 0 4px;
+}
+.hero-currency {
+  font-size: 28px; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-number {
+  font-size: 54px; font-weight: 900; line-height: 1;
+  background: linear-gradient(135deg, var(--accent) 30%, var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-variant-numeric: tabular-nums;
+}
+.hero-sub {
+  font-size: 12px; color: var(--muted);
+}
+
+/* Detail rows */
+.detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  opacity: 0; transform: translateX(16px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+.detail-row:last-child { border-bottom: none; }
+.result-card.visible .detail-row:nth-child(1) { transition-delay: 0.15s; opacity:1; transform:none; }
+.result-card.visible .detail-row:nth-child(2) { transition-delay: 0.22s; opacity:1; transform:none; }
+.result-card.visible .detail-row:nth-child(3) { transition-delay: 0.29s; opacity:1; transform:none; }
+.result-card.visible .detail-row:nth-child(4) { transition-delay: 0.36s; opacity:1; transform:none; }
+.result-card.visible .detail-row:nth-child(5) { transition-delay: 0.43s; opacity:1; transform:none; }
+
+.dk { color: var(--muted); font-size: 13px; }
+.dv { font-weight: 700; font-size: 15px; }
+.dv.g { color: var(--accent); }
+.dv.y { color: var(--warn); }
+.dv.r { color: var(--danger); }
+
+/* ═══════════════════════════════════════
+   ALPHA TABLE
+═══════════════════════════════════════ */
+.alpha-table { display: flex; flex-direction: column; gap: 8px; }
+.at-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface);
+  border-radius: 13px;
+  padding: 13px 16px;
+  border: 1px solid var(--border);
+  transition: background var(--transition), border-color 0.3s;
+}
+.at-row.active-row {
+  border-color: rgba(0,212,160,0.35);
+  background: rgba(0,212,160,0.05);
+}
+.at-range { font-size: 13px; color: var(--muted); }
+.at-badge {
+  font-size: 13px; font-weight: 800;
+  padding: 5px 14px; border-radius: 9px;
+}
+.bg-g { background: rgba(0,212,160,0.14); color: var(--accent); }
+.bg-y { background: rgba(245,166,35,0.14); color: var(--warn); }
+.bg-r { background: rgba(255,95,95,0.14);  color: var(--danger); }
+.bg-purple { background: rgba(168,85,247,0.16); color: #c084fc; }
+
+.at-row.active-row { border-color: rgba(0,212,160,0.35); background: rgba(0,212,160,0.05); }
+.at-row.active-row-p { border-color: rgba(168,85,247,0.4); background: rgba(168,85,247,0.07); }
+
+/* ═══════════════════════════════════════
+   LEGEND / מקרא
+═══════════════════════════════════════ */
+.legend-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+.legend-card .card-title { margin-bottom: 16px; }
+.legend-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.legend-item:last-child { border-bottom: none; padding-bottom: 0; }
+.legend-sym {
+  min-width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 900;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+.sym-n { background: rgba(0,212,160,0.12); color: var(--accent); }
+.sym-a { background: rgba(245,166,35,0.12); color: var(--warn); }
+.sym-s { background: rgba(0,170,255,0.12);  color: var(--accent2); }
+.sym-x { background: rgba(168,85,247,0.12); color: #c084fc; }
+.legend-desc { flex: 1; }
+.legend-desc .ld-title {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  margin-bottom: 2px;
+}
+.legend-desc .ld-sub {
+  font-size: 12px; color: var(--muted); line-height: 1.45;
+}
+
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+.mt8 { margin-top: 8px; }
+
+/* IAI logo bar */
+.iai-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 24px 0;
+  background: var(--bg2);
+}
+.iai-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.iai-emblem {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #003594, #0055cc);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0,53,148,0.5);
+  position: relative; overflow: hidden;
+}
+.iai-emblem::before {
+  content: '';
+  position: absolute;
+  width: 38px; height: 38px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+}
+.iai-emblem svg { position: relative; z-index: 1; }
+.iai-text-block { line-height: 1.2; }
+.iai-name {
+  font-size: 13px; font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+.iai-sub {
+  font-size: 10px; font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  padding: 24px 16px 8px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.app-footer .footer-copy {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.app-footer .footer-brand {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 5px;
+  font-size: 10px;
+  opacity: 0.6;
+}
+</style>
+</head>
+<body>
+
+<!-- ░░ IAI LOGO BAR ░░ -->
+<div class="iai-bar">
+  <div class="iai-logo">
+    <div class="iai-emblem">
+      <!-- IAI-style wing/arrow SVG emblem -->
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M4 22 L14 6 L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M8 22 L14 12 L20 22" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="14" cy="6" r="2" fill="white"/>
+      </svg>
+    </div>
+    <div class="iai-text-block">
+      <div class="iai-name">IAI</div>
+      <div class="iai-sub">התעשייה האווירית לישראל</div>
+    </div>
+  </div>
+</div>
+
+<!-- ░░ HEADER ░░ -->
+<div class="header">
+  <div class="header-blob blob1"></div>
+  <div class="header-blob blob2"></div>
+
+  <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" title="החלף מצב תאורה">🌙</button>
+
+  <div class="header-icon">⏱️</div>
+  <h1>מחשבון<br>שעות נוספות</h1>
+  <p>גילום אוטומטי לפי מקדם משתנה</p>
+  <div class="formula-pill">✦ S = a · N · log₈(N)</div>
+</div>
+
+<!-- ░░ INSTALL BANNER ░░ -->
+<div id="installBanner" style="display:none;">
+  <div id="installBannerInner">
+    <div style="display:flex;align-items:center;gap:12px;flex:1;">
+      <span style="font-size:26px;">📲</span>
+      <div>
+        <div id="installTitle" style="font-size:14px;font-weight:800;color:var(--text);">התקן כאפליקציה</div>
+        <div id="installSub" style="font-size:12px;color:var(--muted);margin-top:2px;">גישה מהירה מהמסך הראשי</div>
+      </div>
+    </div>
+    <button id="installBtn" onclick="triggerInstall()" style="
+      background:linear-gradient(135deg,var(--accent),#00a878);
+      color:#061a14;border:none;border-radius:12px;
+      padding:10px 18px;font-size:13px;font-weight:800;
+      font-family:'Rubik',sans-serif;cursor:pointer;white-space:nowrap;
+    ">התקן</button>
+    <button onclick="dismissBanner()" style="
+      background:transparent;border:none;color:var(--muted);
+      font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;
+    ">✕</button>
+  </div>
+  <!-- iOS instructions (shown only on iOS) -->
+  <div id="iosTip" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(0,212,160,0.07);border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6;">
+    לחץ על <strong style="color:var(--text);">□↑</strong> (כפתור השיתוף) ואז בחר <strong style="color:var(--text);">"הוסף למסך הבית"</strong>
+  </div>
+</div>
+
+<!-- ░░ CONTENT ░░ -->
+<div class="content">
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-title">הזן נתונים</div>
+
+    <!-- N -->
+    <div class="input-group">
+      <div class="input-label">
+        <span class="tag">N</span>
+        מספר שעות נוספות שבוצעו
+      </div>
+      <div class="input-wrap">
+        <input type="number" id="inp-hours" placeholder="0" min="0" step="0.5" inputmode="decimal">
+        <span class="input-suffix">שע׳</span>
+      </div>
+      <div class="input-hint">💡 סך השעות הנוספות שביצע העובד בחודש</div>
+    </div>
+
+    <!-- X -->
+    <div class="input-group">
+      <div class="input-label">
+        <span class="tag">X</span>
+        ערך שעה נוספת <span style="font-weight:400;color:var(--muted);font-size:12px;">(ערך ש.נ מהתלוש)</span>
+      </div>
+      <div class="input-wrap">
+        <input type="number" id="inp-rate" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+        <span class="input-suffix">₪</span>
+      </div>
+      <div class="input-hint">💡 ניתן למצוא ערך זה בתלוש השכר תחת "ערך שעה נוספת"</div>
+    </div>
+
+    <div class="error-msg" id="err">⚠️ נא להזין ערכים תקינים וגדולים מאפס.</div>
+  </div>
+
+  <!-- BUTTONS -->
+  <button class="btn-calc" id="btnCalc" onclick="calculate(event)" disabled style="opacity:0.45;cursor:not-allowed;">▶ חשב שכר שעות נוספות</button>
+  <button class="btn-clear" onclick="clearAll()" id="btnClear" style="display:none;">✕ נקה הכל</button>
+
+  <!-- RESULT -->
+  <div class="result-card" id="resultCard" style="margin-top:14px;">
+    <div class="result-glow-bar"></div>
+    <div class="result-inner">
+      <div class="result-hero">
+        <div class="hero-label">שכר שעות נוספות לתשלום</div>
+        <div class="hero-amount">
+          <span class="hero-currency">₪</span>
+          <span class="hero-number" id="heroNum">0</span>
+        </div>
+        <div class="hero-sub" id="heroSub" style="display:none;">—</div>
+      </div>
+      <div id="detailRows">
+        <div class="detail-row"><span class="dk">שעות נוספות (N)</span><span class="dv" id="dN">—</span></div>
+        <div class="detail-row"><span class="dk">גילום (S)</span><span class="dv" id="dS">—</span></div>
+        <div class="detail-row"><span class="dk">ערך שעה (X)</span><span class="dv" id="dX">—</span></div>
+        <div class="detail-row"><span class="dk">שכר = S × X</span><span class="dv g" id="dFinal">—</span></div>
+      </div>
+    </div>
+  </div>
+
+<!-- ░░ CHART ░░ -->
+</div>
+<div class="content" style="padding-top:0;">
+  <div class="card" style="animation-delay:0.55s;">
+    <div class="card-title">📈 גרף שכר שעות נוספות</div>
+
+    <!-- Legend -->
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;font-size:11px;font-weight:700;">
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:var(--accent);display:inline-block;border-radius:2px;"></span> שכר כולל</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:var(--accent2);display:inline-block;border-radius:2px;border-top:2px dashed var(--accent2);background:transparent;"></span> שיפוע (קצב שינוי)</span>
+      <span style="display:flex;align-items:center;gap:5px;padding:2px 8px;border-radius:6px;background:rgba(0,212,160,0.12);color:var(--accent);">● אזור a=1.0</span>
+      <span style="display:flex;align-items:center;gap:5px;padding:2px 8px;border-radius:6px;background:rgba(245,166,35,0.12);color:var(--warn);">● אזור a=1.1</span>
+      <span style="display:flex;align-items:center;gap:5px;padding:2px 8px;border-radius:6px;background:rgba(255,95,95,0.12);color:var(--danger);">● אזור a=1.3</span>
+      <span style="display:flex;align-items:center;gap:5px;padding:2px 8px;border-radius:6px;background:rgba(168,85,247,0.12);color:#c084fc;">● מעל 50 שע׳</span>
+    </div>
+
+    <!-- Synced to main rate input -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;border-radius:12px;background:rgba(0,212,160,0.08);border:1px solid rgba(0,212,160,0.2);">
+      <span style="font-size:16px;">&#128279;</span>
+      <span style="font-size:13px;font-weight:600;color:var(--accent);">הגרף מתעדכן אוטומטית לפי התעריף השעתי שהזנת למעלה</span>
+      <span id="chart-rate-display" style="margin-right:auto;font-size:13px;font-weight:800;color:var(--text);background:var(--surface);padding:3px 10px;border-radius:8px;border:1px solid var(--border);">&#8362;&#8212;</span>
+    </div>
+
+    <!-- Canvas -->
+    <div style="position:relative;width:100%;border-radius:14px;overflow:hidden;background:var(--surface);border:1px solid var(--border);">
+      <canvas id="overtimeChart" style="width:100%;display:block;cursor:crosshair;"></canvas>
+      <!-- Tooltip -->
+      <div id="chartTooltip" style="position:absolute;pointer-events:none;background:var(--bg2);border:2px solid var(--accent);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;color:var(--text);box-shadow:0 6px 24px rgba(0,212,160,0.3);opacity:0;transition:opacity 0.1s;white-space:nowrap;direction:rtl;min-width:130px;z-index:10;"></div>
+    </div>
+
+    <!-- Stats row -->
+    <div id="chartStats" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;"></div>
+  </div>
+</div>
+
+<div class="content" style="padding-top:0;">
+  <!-- FORMULA CARDS -->
+  <div class="formula-section">
+    <div class="formula-card formula-normal">
+      <div class="fc-label">עד 50 שעות</div>
+      <div class="fc-formula">S = a · N · log₈(N)</div>
+      <div class="fc-sub">שכר = S × X</div>
+      <div class="fc-coeffs">
+        <span class="fcc g">a=1.0 <em>עד 12</em></span>
+        <span class="fcc y">a=1.1 <em>12–20</em></span>
+        <span class="fcc r">a=1.3 <em>20–50</em></span>
+      </div>
+    </div>
+    <div class="formula-card formula-special">
+      <div class="fc-label">מעל 50 שעות</div>
+      <div class="fc-formula" style="font-size:13px;white-space:nowrap;">S = S₅₀ + 1.75·(N−50)</div>
+      <div class="fc-sub">שכר = S × X</div>
+      <div class="fc-coeffs">
+        <span class="fcc" style="background:rgba(168,85,247,0.12);color:#c084fc;">× 1.75 <em>לכל שעה מעל 50</em></span>
+        <span class="fcc" style="background:rgba(168,85,247,0.08);color:#c084fc;font-size:10px;">S₅₀ = גילום 50 השעות הראשונות</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEGEND / מקרא -->
+  <div class="legend-card">
+    <div class="card-title">📖 מקרא פרמטרים</div>
+    <div class="legend-item">
+      <div class="legend-sym sym-n">N</div>
+      <div class="legend-desc">
+        <div class="ld-title">N — מספר שעות נוספות</div>
+        <div class="ld-sub">סך כל השעות הנוספות שביצע העובד בתקופת החישוב. מוזן ידנית על ידי המשתמש.</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-sym sym-x">X</div>
+      <div class="legend-desc">
+        <div class="ld-title">X — ערך שעה נוספת (ערך ש.נ מהתלוש)</div>
+        <div class="ld-sub">שווי כספי של שעה נוספת אחת. מופיע בתלוש השכר תחת הסעיף "ערך שעה נוספת".</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-sym sym-a">a</div>
+      <div class="legend-desc">
+        <div class="ld-title">a — מקדם גילום</div>
+        <div class="ld-sub">מקדם המשתנה בהתאם לכמות השעות הנוספות: 1.0 / 1.1 / 1.3 / 1.75. ככל שיותר שעות — המקדם גבוה יותר.</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-sym sym-s">S</div>
+      <div class="legend-desc">
+        <div class="ld-title">S — גילום שעות נוספות</div>
+        <div class="ld-sub">עד 50 שע׳: S = a · N · log₈(N) &nbsp;|&nbsp; מעל 50 שע׳: S = S₅₀ + 1.75·(N−50). כלומר 50 השעות הראשונות מחושבות עם הלוגריתם, וכל שעה מעבר ל-50 מחושבת לפי מקדם 1.75.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ─── CHART ─────────────────────────────── */
+(function(){
+
+/* Reuse math from main script */
+function calcSChart(N) {
+  if(N<=0) return 0;
+  const base = Math.min(N,50);
+  const a = base<12?1.0:base<20?1.1:1.3;
+  const Sbase = a * base * Math.log(base) / Math.log(8);
+  const Sextra = N>50 ? 1.75*(N-50) : 0;
+  return Sbase + Sextra;
+}
+function calcSalaryChart(N,X){ return calcSChart(N)*X; }
+
+/* Color zones */
+const ZONES = [
+  {from:0,  to:12,  color:'rgba(0,212,160,0.08)',  label:'a=1.0'},
+  {from:12, to:20,  color:'rgba(245,166,35,0.08)', label:'a=1.1'},
+  {from:20, to:50,  color:'rgba(255,95,95,0.08)',  label:'a=1.3'},
+  {from:50, to:100, color:'rgba(168,85,247,0.10)', label:'+1.75/שע'},
+];
+
+const ZONE_COLORS = ['#00d4a0','#f5a623','#ff5f5f','#a855f7'];
+const ZONE_BORDERS= ['rgba(0,212,160,0.6)','rgba(245,166,35,0.6)','rgba(255,95,95,0.6)','rgba(168,85,247,0.6)'];
+
+let hoveredX = null;
+
+window.drawChart = function() {
+  const canvas = document.getElementById('overtimeChart');
+  const X = parseFloat(document.getElementById('inp-rate').value) || 100;
+  const inputN = parseFloat(document.getElementById('inp-hours').value) || 0;
+
+  /* Dynamic X axis: default 60, expand to inputN if larger */
+  const maxX = Math.max(60, Math.ceil(inputN / 10) * 10);
+
+  const dpr = window.devicePixelRatio || 1;
+  const W_css = canvas.parentElement.clientWidth;
+  const H_css = Math.max(220, Math.min(320, W_css * 0.55));
+  canvas.style.height = H_css + 'px';
+  canvas.width  = W_css * dpr;
+  canvas.height = H_css * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = W_css, H = H_css;
+
+  /* Margins — wider left on narrow screens */
+  const ml = W < 320 ? 44 : 52, mr = 10, mt = 20, mb = 36;
+  const pw = W - ml - mr, ph = H - mt - mb;
+
+  /* Data */
+  const STEPS = 200;
+  const pts = [];
+  for(let i=0;i<=STEPS;i++){
+    const N = i/STEPS*maxX;
+    pts.push({N, salary: calcSalaryChart(N, X)});
+  }
+  const maxY = pts[STEPS].salary * 1.08;
+
+  /* Helpers */
+  const tx = N => ml + (N/maxX)*pw;
+  const ty = s => mt + ph - (s/maxY)*ph;
+
+  /* Clear */
+  ctx.clearRect(0,0,W,H);
+
+  /* Dynamic zones clipped to maxX */
+  const ZONES_DYN = [
+    {from:0,  to:Math.min(12,maxX),  color:'rgba(0,212,160,0.08)'},
+    {from:12, to:Math.min(20,maxX),  color:'rgba(245,166,35,0.08)'},
+    {from:20, to:Math.min(50,maxX),  color:'rgba(255,95,95,0.08)'},
+    {from:50, to:maxX,               color:'rgba(168,85,247,0.10)'},
+  ];
+  ZONES_DYN.forEach(z => {
+    if(z.from >= maxX) return;
+    ctx.fillStyle = z.color;
+    ctx.fillRect(tx(z.from), mt, tx(z.to)-tx(z.from), ph);
+  });
+
+  /* Grid lines Y */
+  ctx.setLineDash([4,4]);
+  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  for(let i=1;i<=5;i++){
+    const y = mt + ph/5*(5-i);
+    ctx.beginPath(); ctx.moveTo(ml,y); ctx.lineTo(ml+pw,y); ctx.stroke();
+  }
+
+  /* Grid lines X — pick sensible ticks */
+  const rawTicks = [0,12,20,50,maxX];
+  if(maxX > 60) rawTicks.push(60);
+  if(maxX > 80) rawTicks.push(80);
+  const xTicks = [...new Set(rawTicks.filter(v => v <= maxX))].sort((a,b)=>a-b);
+  xTicks.forEach(x => {
+    ctx.beginPath(); ctx.moveTo(tx(x), mt); ctx.lineTo(tx(x), mt+ph); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  /* Zone boundary lines */
+  [12,20,50].filter(v => v < maxX).forEach((x,i) => {
+    ctx.strokeStyle = ZONE_BORDERS[i+1];
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5,3]);
+    ctx.beginPath(); ctx.moveTo(tx(x),mt); ctx.lineTo(tx(x),mt+ph); ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  /* Gradient fill */
+  const grad = ctx.createLinearGradient(0, mt, 0, mt+ph);
+  grad.addColorStop(0, 'rgba(0,212,160,0.25)');
+  grad.addColorStop(0.5,'rgba(0,170,255,0.10)');
+  grad.addColorStop(1, 'rgba(0,212,160,0.01)');
+  ctx.beginPath();
+  ctx.moveTo(tx(0), ty(0));
+  pts.forEach(p => ctx.lineTo(tx(p.N), ty(p.salary)));
+  ctx.lineTo(tx(maxX), ty(0));
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  /* Main curve */
+  ctx.beginPath();
+  ctx.lineWidth = 2.5;
+  pts.forEach((p,i) => i===0 ? ctx.moveTo(tx(p.N),ty(p.salary)) : ctx.lineTo(tx(p.N),ty(p.salary)));
+  const lineGrad = ctx.createLinearGradient(ml, 0, ml+pw, 0);
+  lineGrad.addColorStop(0,   '#00d4a0');
+  lineGrad.addColorStop(0.5, '#00aaff');
+  lineGrad.addColorStop(1,   '#a855f7');
+  ctx.strokeStyle = lineGrad;
+  ctx.stroke();
+
+  /* Input-hours marker line */
+  if(inputN > 0 && inputN <= maxX){
+    const markerSalary = calcSalaryChart(inputN, X);
+    ctx.setLineDash([3,3]);
+    ctx.strokeStyle='rgba(255,255,255,0.4)';
+    ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(tx(inputN),mt); ctx.lineTo(tx(inputN),mt+ph); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(tx(inputN), ty(markerSalary), 6, 0, Math.PI*2);
+    ctx.fillStyle='#fff';
+    ctx.fill();
+    ctx.strokeStyle='#00d4a0'; ctx.lineWidth=2.5; ctx.stroke();
+  }
+
+  /* Axes */
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(ml,mt); ctx.lineTo(ml,mt+ph); ctx.lineTo(ml+pw,mt+ph); ctx.stroke();
+
+  /* Y labels — clamp to not overflow left edge */
+  ctx.fillStyle = 'rgba(107,143,168,0.9)';
+  ctx.font = `700 ${W<320?9:10}px Rubik,sans-serif`;
+  ctx.textAlign = 'right';
+  for(let i=0;i<=5;i++){
+    const val = maxY/5*i;
+    const y = ty(val);
+    const label = val>=1000 ? (val/1000).toFixed(1)+'K' : Math.round(val).toString();
+    ctx.fillText('₪'+label, ml-4, y+3.5);
+  }
+
+  /* X labels — skip ticks too close together */
+  ctx.fillStyle = 'rgba(107,143,168,0.9)';
+  ctx.font = `700 ${W<320?9:10}px Rubik,sans-serif`;
+  ctx.textAlign = 'center';
+  let lastLabelX = -999;
+  xTicks.forEach(x => {
+    const px = tx(x);
+    if(px - lastLabelX < 22) return; // skip if too crowded
+    ctx.fillText(x, px, mt+ph+14);
+    lastLabelX = px;
+  });
+
+  /* X axis title */
+  ctx.fillStyle='rgba(107,143,168,0.7)'; ctx.font=`600 ${W<320?9:10}px Rubik,sans-serif`;
+  ctx.fillText('שעות נוספות', ml+pw/2, H-2);
+
+  /* Hover line & dot */
+  if(hoveredX !== null && hoveredX>=0 && hoveredX<=maxX){
+    const hS = calcSalaryChart(hoveredX, X);
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle='rgba(255,255,255,0.25)';
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(tx(hoveredX),mt); ctx.lineTo(tx(hoveredX),mt+ph); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(tx(hoveredX), ty(hS), 5, 0, Math.PI*2);
+    const zoneIdx = hoveredX<=12?0:hoveredX<=20?1:hoveredX<=50?2:3;
+    ctx.fillStyle = ZONE_COLORS[zoneIdx];
+    ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+  }
+
+  /* Zone labels on top — only if zone is visible */
+  ctx.font=`bold ${W<340?9:10}px Rubik,sans-serif`;
+  const zoneLabels = [[6,'a=1.0','#00d4a0'],[16,'a=1.1','#f5a623'],[35,'a=1.3','#ff5f5f'],[75,'>50','#a855f7']];
+  zoneLabels.forEach(([x,label,color])=>{
+    if(x > maxX) return;
+    ctx.fillStyle=color+'cc';
+    ctx.textAlign='center';
+    // clamp label within canvas
+    const lx = Math.max(ml+18, Math.min(tx(x), ml+pw-18));
+    ctx.fillText(label, lx, mt+12);
+  });
+
+  /* Stats */
+  const statsEl = document.getElementById('chartStats');
+  const statStyle = (bg,color) => `display:inline-flex;flex-direction:column;align-items:center;padding:8px 10px;border-radius:12px;background:${bg};border:1px solid rgba(255,255,255,0.06);flex:1;min-width:70px;`;
+  const fmt = n => n.toLocaleString('he-IL',{minimumFractionDigits:0,maximumFractionDigits:0});
+  const statPoints = [[12,'12 שע׳','rgba(0,212,160,0.10)','#00d4a0'],[20,'20 שע׳','rgba(245,166,35,0.10)','#f5a623'],[50,'50 שע׳','rgba(255,95,95,0.10)','#ff5f5f']];
+  if(maxX > 50) statPoints.push([maxX, maxX+' שע׳','rgba(168,85,247,0.10)','#a855f7']);
+  statsEl.innerHTML = statPoints.map(([n,lbl,bg,color])=>`<div style="${statStyle(bg,color)}"><span style="font-size:10px;font-weight:700;color:rgba(107,143,168,0.9);margin-bottom:3px;">${lbl}</span><span style="font-size:13px;font-weight:900;color:${color};">₪${fmt(calcSalaryChart(n,X))}</span></div>`).join('');
+};
+
+/* Mouse / touch events */
+function getCurrentMaxX(){
+  const inputN = parseFloat(document.getElementById('inp-hours').value) || 0;
+  return Math.max(60, Math.ceil(inputN / 10) * 10);
+}
+function hasRate(){ return parseFloat(document.getElementById('inp-rate').value) > 0; }
+
+function showTip(cx, cy, N, salary, rectWidth) {
+  const tip = document.getElementById('chartTooltip');
+  tip.innerHTML = `<span style="font-size:12px;color:var(--muted);">שעות</span> <strong style="font-size:15px;">${N.toFixed(1)}</strong><br><span style="color:var(--accent);font-size:16px;font-weight:900;">₪${salary.toLocaleString('he-IL',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+  tip.style.opacity = '1';
+  const tipW = 150;
+  let left = cx + 14;
+  if (left + tipW > rectWidth - 4) left = cx - tipW - 10;
+  if (left < 4) left = 4;
+  let top = (cy !== null) ? Math.max(4, cy - 10) : 16;
+  tip.style.left = left + 'px';
+  tip.style.top  = top + 'px';
+}
+
+function handleChartInteraction(cx, cyRelative, rect) {
+  if (!hasRate()) return;
+  const X = parseFloat(document.getElementById('inp-rate').value);
+  const maxX = getCurrentMaxX();
+  const ml = 52, mr = 10, pw = rect.width - ml - mr;
+  const N = Math.max(0, Math.min(maxX, (cx - ml) / pw * maxX));
+  hoveredX = N;
+  drawChart();
+  showTip(cx, cyRelative, N, calcSalaryChart(N, X), rect.width);
+}
+
+document.getElementById('overtimeChart').addEventListener('mousemove', function(e){
+  const rect = this.getBoundingClientRect();
+  handleChartInteraction(e.clientX - rect.left, e.clientY - rect.top, rect);
+});
+document.getElementById('overtimeChart').addEventListener('mouseleave', function(){
+  hoveredX = null;
+  if (hasRate()) drawChart(); else window.resetChart();
+  document.getElementById('chartTooltip').style.opacity = '0';
+});
+document.getElementById('overtimeChart').addEventListener('touchstart', function(e){
+  const rect = this.getBoundingClientRect();
+  handleChartInteraction(e.touches[0].clientX - rect.left, null, rect);
+}, {passive:true});
+document.getElementById('overtimeChart').addEventListener('touchmove', function(e){
+  e.preventDefault();
+  const rect = this.getBoundingClientRect();
+  handleChartInteraction(e.touches[0].clientX - rect.left, null, rect);
+}, {passive:false});
+document.getElementById('overtimeChart').addEventListener('touchend', function(){
+  /* keep tooltip visible — dot stays on last position */
+});
+document.getElementById('overtimeChart').addEventListener('touchcancel', function(){
+  hoveredX = null;
+  document.getElementById('chartTooltip').style.opacity = '0';
+  if (hasRate()) drawChart(); else window.resetChart();
+});
+/* Tap outside chart hides tooltip */
+document.addEventListener('touchstart', function(e){
+  if (!e.target.closest('#overtimeChart')) {
+    hoveredX = null;
+    document.getElementById('chartTooltip').style.opacity = '0';
+    if (hasRate()) drawChart(); else window.resetChart();
+  }
+}, {passive:true});
+
+/* Init & resize */
+window.syncChartRate = function() {
+  const X = parseFloat(document.getElementById('inp-rate').value);
+  const disp = document.getElementById('chart-rate-display');
+  if (disp) disp.textContent = X > 0 ? "₪" + X.toLocaleString('he-IL') : "₪—";
+  if (!X || X <= 0) {
+    window.resetChart();
+  } else {
+    drawChart();
+  }
+}
+
+window.resetChart = function() {
+  const canvas = document.getElementById('overtimeChart');
+  const dpr = window.devicePixelRatio || 1;
+  const W_css = canvas.parentElement.clientWidth;
+  const H_css = Math.max(220, Math.min(320, W_css * 0.55));
+  canvas.style.height = H_css + 'px';
+  canvas.width  = W_css * dpr;
+  canvas.height = H_css * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Draw empty axes
+  ctx.scale(dpr, dpr);
+  const W = W_css, H = H_css;
+  const ml=52, mr=10, mt=20, mb=36, pw=W-ml-mr, ph=H-mt-mb;
+  ctx.strokeStyle='rgba(255,255,255,0.15)';
+  ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ml,mt); ctx.lineTo(ml,mt+ph); ctx.lineTo(ml+pw,mt+ph); ctx.stroke();
+  // Empty message
+  ctx.fillStyle='rgba(107,143,168,0.5)';
+  ctx.font='600 13px Rubik,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('הזן תעריף שעתי כדי להציג את הגרף', ml+pw/2, mt+ph/2);
+  // Clear stats
+  const statsEl = document.getElementById('chartStats');
+  if(statsEl) statsEl.innerHTML='';
+};
+document.getElementById('inp-rate').addEventListener('input', window.syncChartRate);
+document.getElementById('inp-hours').addEventListener('input', function(){ window.syncChartRate(); });
+window.addEventListener('resize', function(){ window.syncChartRate(); });
+window.addEventListener('load', function(){ window.resetChart(); });
+setTimeout(function(){ window.resetChart(); }, 200);
+})();
+</script>
+
+<!-- ░░ FOOTER ░░ -->
+<div class="app-footer">
+  <div class="footer-copy">© כל הזכויות שמורות לששון דן</div>
+  <div class="footer-brand">
+    <span>⚙️</span>
+    <span>מחשבון שעות נוספות · IAI</span>
+  </div>
+</div>
+
+<script>
+/* ─── MATH ─────────────────────────────── */
+function isSpecial(N) { return N > 50; }
+function alphaFor(N) {
+  const base = Math.min(N, 50);
+  return base < 12 ? 1.0 : base < 20 ? 1.1 : 1.3;
+}
+function calcSBase(N) {
+  // S for up to 50h using log formula
+  const base = Math.min(N, 50);
+  return base > 0 ? alphaFor(base) * base * Math.log(base) / Math.log(8) : 0;
+}
+function calcSExtra(N) {
+  // S for hours above 50 using 1.75 per hour
+  return N > 50 ? 1.75 * (N - 50) : 0;
+}
+function calcS(N)      { return calcSBase(N) + calcSExtra(N); }
+function calcSalary(N, X) { return calcS(N) * X; }
+function fmtNum(n) { return n.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+/* ─── THEME ─────────────────────────────── */
+let dark = true;
+function toggleTheme() {
+  dark = !dark;
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+  document.querySelector('meta[name=theme-color]').content = dark ? '#0b1a24' : '#f0f5f9';
+}
+
+/* ─── ALPHA INDICATOR (live) ─────────────── */
+document.getElementById('inp-hours').addEventListener('input', updateAlphaUI);
+
+/* ─── BUTTON / CLEAR STATE ─────────────────── */
+function updateButtonState() {
+  const N = parseFloat(document.getElementById('inp-hours').value);
+  const X = parseFloat(document.getElementById('inp-rate').value);
+  const btn = document.getElementById('btnCalc');
+  const clr = document.getElementById('btnClear');
+  const valid = N > 0 && X > 0;
+  btn.disabled = !valid;
+  btn.style.opacity = valid ? '1' : '0.45';
+  btn.style.cursor  = valid ? 'pointer' : 'not-allowed';
+  const hasData = (document.getElementById('inp-hours').value !== '' || document.getElementById('inp-rate').value !== '');
+  clr.style.display = hasData ? 'block' : 'none';
+}
+document.getElementById('inp-hours').addEventListener('input', updateButtonState);
+document.getElementById('inp-rate').addEventListener('input', updateButtonState);
+
+function updateAlphaUI(highlight) {
+  const N = parseFloat(document.getElementById('inp-hours').value);
+  const badge = document.getElementById('alphaBadge');
+  const segs  = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3'), document.getElementById('s4')];
+  const rows  = [document.getElementById('row0'), document.getElementById('row1'), document.getElementById('row2'), document.getElementById('row3')];
+
+  segs.forEach(s => { s.className = 'alpha-seg'; });
+  rows.forEach(r => { r.classList.remove('active-row'); r.classList.remove('active-row-p'); });
+  badge.className = 'alpha-badge';
+
+  if (!isNaN(N) && N > 0) {
+    if (N > 50) {
+      segs.forEach(s => s.classList.add('p')); segs[3].classList.add('lit');
+      badge.classList.add('p'); badge.textContent = `a=1.3 + 1.75×${(N-50).toFixed(1)}שע׳`;
+      rows[3].classList.add('active-row-p');
+    } else if (N < 12) {
+      segs[0].classList.add('g','lit');
+      badge.classList.add('g'); badge.textContent = 'a = 1.0';
+      rows[0].classList.add('active-row');
+    } else if (N < 20) {
+      segs[0].classList.add('y'); segs[1].classList.add('y','lit');
+      badge.classList.add('y'); badge.textContent = 'a = 1.1';
+      rows[1].classList.add('active-row');
+    } else {
+      segs[0].classList.add('r'); segs[1].classList.add('r'); segs[2].classList.add('r','lit');
+      badge.classList.add('r'); badge.textContent = 'a = 1.3';
+      rows[2].classList.add('active-row');
+    }
+  } else {
+    badge.textContent = '—';
+  }
+}
+
+/* ─── COUNTER ANIMATION ─────────────────── */
+function animateCounter(el, from, to, duration) {
+  const start = performance.now();
+  const diff = to - from;
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    // ease out expo
+    const e = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+    const val = from + diff * e;
+    el.textContent = fmtNum(val);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ─── RIPPLE ─────────────────────────────── */
+function addRipple(btn, e) {
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+  btn.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
+}
+
+/* ─── CALCULATE ─────────────────────────── */
+function calculate(e) {
+  addRipple(document.getElementById('btnCalc'), e);
+
+  const errEl   = document.getElementById('err');
+  const resCard = document.getElementById('resultCard');
+  errEl.classList.remove('visible');
+
+  const N = parseFloat(document.getElementById('inp-hours').value);
+  const X = parseFloat(document.getElementById('inp-rate').value);
+
+  if (isNaN(N) || isNaN(X) || N <= 0 || X <= 0) {
+    errEl.classList.add('visible');
+    resCard.classList.remove('visible');
+    return;
+  }
+
+  const a       = alphaFor(N);
+  const Sbase   = calcSBase(N);
+  const Sextra  = calcSExtra(N);
+  const S       = calcS(N);
+  const salary  = calcSalary(N, X);
+  const special = isSpecial(N);
+
+  // Fill detail rows
+  document.getElementById('dN').textContent = N + ' שע׳';
+  document.getElementById('dS').textContent = S.toFixed(4);
+  document.getElementById('dX').textContent = '₪' + fmtNum(X);
+  document.getElementById('dFinal').textContent = '₪' + fmtNum(salary);
+  document.getElementById('heroSub').textContent = `S = ${S.toFixed(2)}  ×  ₪${fmtNum(X)}`;
+
+  // Show card
+  resCard.classList.remove('visible');
+  void resCard.offsetWidth;
+  resCard.classList.add('visible');
+
+  // Animate counter
+  const heroNum = document.getElementById('heroNum');
+  animateCounter(heroNum, 0, salary, 900);
+
+  // Scroll
+  setTimeout(() => resCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+}
+
+/* ─── CLEAR ─────────────────────────────── */
+function clearAll() {
+  document.getElementById('inp-hours').value = '';
+  document.getElementById('inp-rate').value  = '';
+  document.getElementById('err').classList.remove('visible');
+  document.getElementById('resultCard').classList.remove('visible');
+  const badge = document.getElementById('alphaBadge');
+  if(badge) { badge.textContent = '—'; badge.className = 'alpha-badge'; }
+  ['s1','s2','s3'].forEach(id => { const el = document.getElementById(id); if(el) el.className='alpha-seg'; });
+  ['row0','row1','row2','row3'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.classList.remove('active-row'); el.classList.remove('active-row-p'); }
+  });
+  // Reset chart display
+  const disp = document.getElementById('chart-rate-display');
+  if(disp) disp.textContent = '₪—';
+  if(window.resetChart) window.resetChart();
+  updateButtonState();
+  document.getElementById('inp-hours').focus();
+}
+
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+// Enter key
+document.addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('btnCalc').click(); });
+
+/* ─── PWA INSTALL ─────────────────────── */
+let deferredPrompt = null;
+const banner = document.getElementById('installBanner');
+
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+function isInStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+}
+
+// Android/Chrome: catch the install prompt
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!isInStandaloneMode()) {
+    banner.style.display = 'block';
+  }
+});
+
+// iOS: show manual instructions
+if (isIOS() && !isInStandaloneMode()) {
+  document.getElementById('installBtn').style.display = 'none';
+  document.getElementById('iosTip').style.display = 'block';
+  document.getElementById('installTitle').textContent = 'הוסף למסך הבית';
+  document.getElementById('installSub').textContent = 'עקוב אחרי ההוראות למטה';
+  banner.style.display = 'block';
+}
+
+// Hide banner after install
+window.addEventListener('appinstalled', () => {
+  banner.style.display = 'none';
+  deferredPrompt = null;
+});
+
+function triggerInstall() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    banner.style.display = 'none';
+  });
+}
+
+function dismissBanner() {
+  banner.style.display = 'none';
+  sessionStorage.setItem('installDismissed', '1');
+}
+
+// Don't show again if dismissed this session
+if (sessionStorage.getItem('installDismissed')) {
+  banner.style.display = 'none';
+}
+</script>
+</body>
+</html>
